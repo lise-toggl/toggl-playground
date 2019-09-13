@@ -3,19 +3,35 @@ import axios from "axios";
 import DayPicker from "react-day-picker/DayPicker";
 import dayjs from "dayjs";
 import "react-day-picker/lib/style.css";
+import { loader, formatTime, formatAmount } from "../common/utils";
+
+const ReportRow = ({
+  className,
+  description,
+  time,
+  amount,
+  decimal,
+  hideAmounts
+}) => (
+  <tr className={className}>
+    <td>{description}</td>
+    <td>{formatTime(time, decimal)}</td>
+    {!hideAmounts && <td>{formatAmount(amount)}</td>}
+  </tr>
+);
 
 export default class WeeklyReport extends Component {
   constructor(props) {
     super(props);
     this.state = {
       loading: true,
+      error: "",
       decimal: false,
       hideAmounts: false,
       apiKey: "",
       userId: "",
       range: [],
       workspaces: [],
-      projects: [],
       data: []
     };
   }
@@ -25,9 +41,9 @@ export default class WeeklyReport extends Component {
     this.setState({
       apiKey,
       userId: "",
+      error: "",
       range: [],
       workspaces: [],
-      projects: [],
       data: []
     });
 
@@ -58,10 +74,14 @@ export default class WeeklyReport extends Component {
     };
     return headers;
   };
-  getProfileData = async () => {
+  getProfileData = () => {
     const headers = this.buildHeaders();
-    let data = [];
-    this.setState({ data });
+    this.setState({
+      loading: true,
+      error: "",
+      data: [],
+      workspaces: []
+    });
 
     axios
       .get("https://www.toggl.com/api/v8/me?with_related_data=true", {
@@ -71,12 +91,14 @@ export default class WeeklyReport extends Component {
         let i = 0;
         this.setState(
           {
-            loading: true,
-            workspaces: res.data.data.workspaces,
-            projects: res.data.data.projects
+            workspaces: res.data.data.workspaces
           },
           () => this.getReportData(0)
         );
+      })
+      .catch(error => {
+        console.log(error);
+        this.setState({ error: error.response });
       });
   };
   getReportData = i => {
@@ -93,7 +115,6 @@ export default class WeeklyReport extends Component {
         { headers }
       )
       .then(res => {
-        console.log(res.data);
         if (res.data.data.length) {
           const item = {
             workspace: this.state.workspaces[i].name,
@@ -103,10 +124,14 @@ export default class WeeklyReport extends Component {
           };
           this.setState({ data: [...this.state.data, item] });
         }
+      })
+      .catch(error => {
+        console.log(error);
+        this.setState({ error: error.response });
       });
 
     setTimeout(() => {
-      if (i + 1 < this.state.workspaces.length) {
+      if (!this.state.error & (i + 1 < this.state.workspaces.length)) {
         this.getReportData(i + 1);
       } else {
         this.setState({ loading: false });
@@ -128,9 +153,7 @@ export default class WeeklyReport extends Component {
           .toDate()
       );
     }
-    this.setState({
-      range
-    });
+    this.setState({ range });
 
     this.getProfileData();
   };
@@ -141,45 +164,6 @@ export default class WeeklyReport extends Component {
       }
     });
   }
-  renderLoader() {
-    return (
-      <div class="loader"></div>
-    );
-  }
-  renderTime = ms => {
-    if (this.state.decimal) {
-      return (ms / 3600000).toFixed(2) + " h";
-    } else {
-      const pad = n => ("0" + n).slice(-2);
-      return (
-        pad((ms / 3.6e6) | 0) +
-        ":" +
-        pad(((ms % 3.6e6) / 6e4) | 0) +
-        ":" +
-        pad(((ms % 6e4) / 1000) | 0)
-      );
-    }
-  };
-  renderAmount = amount => {
-    if (Array.isArray(amount)) {
-      return this.renderAmount(amount[0]);
-    } else {
-      if (amount.currency) {
-        return amount.amount + " " + amount.currency;
-      } else {
-        return "";
-      }
-    }
-  };
-  renderRow = (className, text, time, amount) => {
-    return (
-      <tr className={className}>
-        <td>{text}</td>
-        <td>{this.renderTime(time)}</td>
-        {!this.state.hideAmounts && <td>{this.renderAmount(amount)}</td>}
-      </tr>
-    );
-  };
   renderTable() {
     return (
       <table className="u-full-width weekly-report">
@@ -193,41 +177,54 @@ export default class WeeklyReport extends Component {
           </tr>
         </thead>
         <tbody>
-          {this.state.data.map(ws => (
-            <>
-              {this.renderRow(
-                "workspace-row",
-                ws.workspace,
-                ws.time,
-                ws.amount
-              )}
-              {ws.entries.map(project => (
-                <>
-                  {this.renderRow(
-                    "project-row",
-                    project.title.project
-                      ? project.title.project
-                      : "(No project)",
-                    project.time,
-                    project.total_currencies
-                  )}
-                  {project.items.map(entry =>
-                    this.renderRow(
-                      "entry-row",
-                      entry.title.time_entry
-                        ? entry.title.time_entry
-                        : "(No description)",
-                      entry.time,
-                      { amount: entry.sum, currency: entry.cur }
-                    )
-                  )}
-                </>
-              ))}
-            </>
-          ))}
+          <>{this.renderRows()}</>
         </tbody>
       </table>
     );
+  }
+  renderRows() {
+    const { data: workspaces, decimal, hideAmounts } = this.state;
+
+    const rows = workspaces
+      .map(ws =>
+        [
+          {
+            className: "workspace-row",
+            description: ws.workspace,
+            time: ws.time,
+            amount: ws.amount
+          }
+        ].concat(
+          ws.entries.map(project =>
+            [
+              {
+                className: "project-row",
+                description: project.title.project || "(No project)",
+                time: project.time,
+                amount: project.total_currencies
+              }
+            ].concat(
+              project.items.map(entry => ({
+                className: "entry-row",
+                description: entry.title.time_entry || "(No description)",
+                time: entry.time,
+                amount: { amount: entry.sum, currency: entry.cur }
+              }))
+            )
+          )
+        )
+      )
+      .flat(2)
+      .map((props, i) => (
+        <ReportRow
+          key={i}
+          {...props}
+          decimal={decimal}
+          hideAmounts={hideAmounts}
+        />
+      ));
+
+    return rows;
   }
   render() {
     return (
@@ -303,8 +300,9 @@ export default class WeeklyReport extends Component {
                 {" " +
                   dayjs(this.state.range.slice(-1)[0]).format("YYYY-MM-DD")}
               </h5>
+              {this.state.error && this.state.error}
               {this.state.loading
-                ? this.renderLoader()
+                ? loader()
                 : this.state.data.length
                   ? this.renderTable()
                   : "No time entries found."}

@@ -1,40 +1,40 @@
 {
-  "name": "parcel",
-  "version": "0.0.1",
-  "description": "A simple Parcel starter project",
+  "name": "toggl-playground",
+  "version": "0.0.2",
+  "description": "Experiments with the Toggl public API",
   "scripts": {
     "build": "parcel build src/index.html -d build",
     "start": "parcel src/index.html"
   },
   "dependencies": {
     "axios": "^0.19.0",
+    "dayjs": "^1.8.16",
+    "lodash.debounce": "^4.0.8",
     "normalize.css": "^8.0.1",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
-    "styles": "^0.2.1",
     "react-router-dom": "^5.0.1",
     "react-csv": "^1.1.1",
-    "react-day-picker": "^7.3.2",
-    "dayjs": "^1.8.15"
+    "react-day-picker": "^7.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/plugin-proposal-class-properties": "^7.5.0",
+    "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/preset-env": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
-    "parcel-bundler": "^1.10.3",
-    "@babel/plugin-transform-runtime": "^7.5.5",
-    "@babel/runtime": "^7.5.4"
+    "@babel/runtime": "^7.5.4",
+    "parcel-bundler": "^1.10.3"
   },
   "engines": {
     "node": "11.x"
   },
   "repository": {
-    "url": "https://glitch.com/edit/#!/peppered-soarer"
+    "url": "https://glitch.com/edit/#!/toggl-playground"
   },
   "license": "MIT",
   "keywords": [
-    "parcel",
+    "toggl",
     "react"
   ]
 }

@@ -1,6 +1,6 @@
 # Toggl playground
 
-These are some examples of what you can do with the Toggl API!
+These are some examples of what you can do with the Toggl public API!
 
 Each example is as self contained as possible for easy remixing.
 
