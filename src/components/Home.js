@@ -14,6 +14,9 @@ const Home = props => (
         <li>
           <Link to="/weeklyreport">Weekly Report Tool</Link>
         </li>
+        <li>
+          <Link to="/allprojectspublic">Make All Projects Public Tool</Link>
+        </li>
       </ul>
     </div>
   </div>
