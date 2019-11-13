@@ -56,6 +56,10 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: space-between;
 }
 
+.action {
+  padding: 2rem;
+}
+
 .status-green {
   border: 2px solid #4caf50;
   border-radius: 0.4rem;
