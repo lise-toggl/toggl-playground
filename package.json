@@ -7,7 +7,7 @@
     "build": "parcel build src/index.html --public-url /toggl-playground --out-dir docs"
   },
   "dependencies": {
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "bottleneck": "^2.19.5",
     "dayjs": "^1.8.17",
     "lodash.debounce": "^4.0.8",
